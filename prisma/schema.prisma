@@ -16,8 +16,70 @@ datasource db {
 
 model User{
   id Int @id @unique @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
   name String 
   email String @unique
   pass String @unique
   userId String @unique @default(uuid())
+  role Roles @default(REGULAR)
+  isOnboarded Boolean @default(false)
+  organizations Organizations[]
+  nominations Nominations[]
+}
+
+model Organizations{
+  id Int @id @unique @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+  organizationName String
+  phone String
+  otherPhone String
+  address String
+  profileImage String
+  uniqueOrganizationId String @default(cuid())
+  organizationId Int 
+  user User @relation(fields: [organizationId], references: [id])
+}
+
+
+//The nominations model. Note that the admin will have to clear the system after each nomination
+model Nominations{
+  id Int @id @unique @default(autoincrement())
+  nominationCategory String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+  nominationId Int @unique @default(autoincrement())
+  nominationStartDate DateTime
+  nominationEndDate DateTime
+  nominationPeriod DateTime
+  uniqueNominationId String @unique
+  nominees Nominees[]
+  user User @relation(fields: [nominationId], references: [id])
+}
+
+model Nominees{
+  id Int @id @unique @default(autoincrement())
+  createdAt DateTime @default(now()) 
+  updatedAt DateTime @default(now())
+  uniqueNomineeId String @default(cuid())
+  nomineePhone String
+  nomineeFirstName String
+  nomineeLastName String
+  nomineeEmail String
+  nomineeProfileImage String
+  nomineeCategory String
+  nomineeBio String
+  nomineeCode String
+  nomineeId Int @default(autoincrement())
+  nominations Nominations @relation(fields: [nomineeId], references: [id])
+
+}
+
+
+enum Roles{
+  ADMIN
+  SUPERADMIN
+  GUEST
+  REGULAR
 }

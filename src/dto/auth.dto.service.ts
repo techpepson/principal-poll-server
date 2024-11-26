@@ -6,7 +6,6 @@ import {
 } from 'class-validator';
 
 export class RegisterDto {
-  registerPayload() {}
   @IsString()
   @IsNotEmpty()
   name: string;

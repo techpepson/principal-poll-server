@@ -102,6 +102,7 @@ export class AuthService {
       const userResponsePayload = {
         name: user.name,
         email: user.email,
+        isOnboarded: user.isOnboarded,
       };
 
       return {
