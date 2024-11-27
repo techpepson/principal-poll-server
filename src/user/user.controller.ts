@@ -2,14 +2,18 @@
 https://docs.nestjs.com/controllers#controllers
 */
 
-import { Body, Controller, Post, Req, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Param,
+  Post,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { Request, Response } from 'express';
-import {
-  NominationsDto,
-  NomineesDto,
-  UserOnboardDto,
-} from 'src/dto/user.dto.service';
+import { NominationsDto, UserOnboardDto } from 'src/dto/user.dto.service';
 import { JwtGuard } from 'src/guards';
 
 @Controller('user')
@@ -39,36 +43,16 @@ export class UserController {
     }
 
     //return the user to the client
+
     return {
       userOnboard,
       success: true,
     };
   }
 
-  @Post('create-nomination')
+  @Post('nominateNominee')
   @UseGuards(JwtGuard)
-  async createNomination(@Body() payload: NominationsDto, @Req() req: Request) {
-    const user = (req.user as any).userEmail;
-
-    if (!user) {
-      return { message: 'Email not found' };
-    }
-
-    //invoke the add nomination method
-    const createNomination = await this.userService.addNomination(
-      user,
-      payload,
-    );
-
-    //return the created nomination to the client
-    return {
-      nomination: createNomination,
-    };
-  }
-
-  @Post('nominate-user')
-  @UseGuards(JwtGuard)
-  async addNominee(@Body() payload: NomineesDto, @Req() req: Request) {
+  async addNominee(@Body() payload: NominationsDto, @Req() req: Request) {
     const user = (req.user as any).userEmail;
 
     if (!user) {
@@ -81,6 +65,49 @@ export class UserController {
     //return the created nomination to the client
     return {
       nominee: createNomination,
+    };
+  }
+
+  @Post('approveNominee')
+  async approveNominee(@Req() req: Request, @Param('id') nomineeId: string) {
+    const admin = (req.user as any).userEmail;
+
+    //check if the user is logged in
+    if (!admin) {
+      return { message: ' Admin not found' };
+    }
+
+    //get  the id from the param
+    const id = nomineeId;
+
+    //invoke the approve nominee method
+    const approveNominee = await this.userService.approveNominee(admin, id);
+
+    //return the approved nominee to the client
+    return {
+      approveNominee,
+    };
+  }
+
+  //remove user
+  @Post('approveNominee')
+  async removeNominee(@Req() req: Request, @Param('id') nomineeId: string) {
+    const admin = (req.user as any).userEmail;
+
+    //check if the user is logged in
+    if (!admin) {
+      return { message: ' Admin not found' };
+    }
+
+    //get  the id from the param
+    const id = nomineeId;
+
+    //invoke the remove nominee method
+    const approveNominee = await this.userService.removeNominee(admin, id);
+
+    //return the removed nominee to the client
+    return {
+      approveNominee,
     };
   }
 }

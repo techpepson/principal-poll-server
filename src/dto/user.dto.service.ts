@@ -1,4 +1,11 @@
-import { IsDate, IsNotEmpty, IsPhoneNumber, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsDate,
+  IsNotEmpty,
+  IsNumber,
+  IsPhoneNumber,
+  IsString,
+} from 'class-validator';
 
 export class UserOnboardDto {
   @IsString()
@@ -69,12 +76,21 @@ export class NominationsDto {
   nominationName: string;
 
   @IsString()
-  @IsNotEmpty()
-  nominationCategory: string;
+  nominationsTitle: string;
 
   @IsString()
-  nominationDuration: string;
+  @IsNotEmpty()
+  @IsArray()
+  nominationCategories: string[];
 
+  @IsString()
+  nominationPeriod: string;
+
+  @IsNumber()
+  nominationRate: number;
+
+  @IsString()
+  nominationDescription: string;
   @IsDate()
   @IsNotEmpty()
   nominationStartDate: Date;
@@ -85,4 +101,41 @@ export class NominationsDto {
 
   @IsString()
   nominationId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  nomineeName: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsPhoneNumber()
+  nomineePhone: string;
+
+  @IsString()
+  @IsNotEmpty()
+  nomineeFirstName: string;
+
+  @IsString()
+  @IsNotEmpty()
+  nomineeLastName: string;
+
+  @IsString()
+  @IsNotEmpty()
+  nomineeEmail: string;
+
+  @IsString()
+  @IsNotEmpty()
+  nomineeProfileImage: string;
+
+  @IsString()
+  @IsNotEmpty()
+  nomineeCategory: string;
+
+  @IsString()
+  @IsNotEmpty()
+  nomineeBio: string;
+
+  @IsString()
+  @IsNotEmpty()
+  uniqueNominationId: string;
 }
