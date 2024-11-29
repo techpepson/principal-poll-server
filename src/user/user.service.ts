@@ -145,6 +145,7 @@ export class UserService {
                   nomineeProfileImage: payload.nomineeProfileImage,
                   nomineeBio: payload.nomineeBio,
                   nomineeCode: this.uniqueGeneratedId,
+                  nomineeCategory: payload.nomineeCategory,
                 },
               },
             },
@@ -319,5 +320,106 @@ export class UserService {
     return {
       message: 'Account edited successfully',
     };
+  }
+
+  //get all contestants from the database
+  async readAllNominations(takeValue: number, email: string) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
+
+    //check if the use is in the database
+    if (!user) {
+      throw new NotFoundException('The admin could not be found');
+    }
+
+    //check if the user is allowed to fetch the contestants
+    if (user.role !== 'ADMIN') {
+      throw new UnauthorizedException('Access denied');
+    }
+
+    //fetch the nominations from the database
+
+    try {
+      const nominations = await this.prisma.user.findMany({
+        take: takeValue,
+        where: {
+          email,
+        },
+        include: {
+          nominations: {
+            orderBy: {
+              nominationDescription: 'asc',
+            },
+          },
+        },
+      });
+
+      // Return the nominations with a success message
+      return {
+        message: 'Nominations returned successfully.',
+        nominations,
+      };
+    } catch (error) {
+      // Log the error for debugging (optional)
+      console.error(error);
+
+      // Throw an internal server error
+      throw new InternalServerErrorException(
+        'There was an internal server error while fetching nominations',
+      );
+    }
+  }
+
+  //fetch nomination nominees
+  async readAllNominationNominees(nominationId: string, email: string) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
+
+    //check if the use is in the database
+    if (!user) {
+      throw new NotFoundException('The admin could not be found');
+    }
+
+    //check if the user is allowed to fetch the contestants
+    if (user.role !== 'ADMIN') {
+      throw new UnauthorizedException('Access denied');
+    }
+
+    //fetch the nominations from the database
+
+    try {
+      const nominationNominees = await this.prisma.nominations.findMany({
+        where: {
+          uniqueNominationId: nominationId,
+        },
+        include: {
+          nominees: {
+            orderBy: {
+              nomineeFirstName: 'asc',
+            },
+          },
+        },
+      });
+
+      // Return the nominations with a success message
+      return {
+        message: 'Nominees returned successfully.',
+        nominationNominees,
+      };
+    } catch (error) {
+      // Log the error for debugging (optional)
+      console.error(error);
+
+      // Throw an internal server error
+      throw new InternalServerErrorException(
+        'There was an internal server error while fetching nominees',
+      );
+    }
   }
 }

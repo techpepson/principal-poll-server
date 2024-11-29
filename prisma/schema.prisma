@@ -67,6 +67,7 @@ model Nominees{
   updatedAt DateTime @default(now())
   uniqueNomineeId String @unique() @default(cuid())
   nomineePhone String
+  nomineeCategory String
   nomineeFirstName String
   nomineeLastName String
   nomineeEmail String
@@ -74,8 +75,8 @@ model Nominees{
   nomineeBio String
   nomineeCode String
   nomineeStatus String @default("pending")
-  nomineeVotes Int?
-  nomineeAmount Int?
+  nomineeVotes Int @default(0)
+  nomineeAmount Int @default(0)
   nomineeId Int @default(autoincrement())
   nominations Nominations @relation(fields: [nomineeId], references: [id])
 

@@ -5,6 +5,7 @@ https://docs.nestjs.com/controllers#controllers
 import {
   Body,
   Controller,
+  Get,
   Param,
   Post,
   Req,
@@ -108,6 +109,68 @@ export class UserController {
     //return the removed nominee to the client
     return {
       approveNominee,
+    };
+  }
+
+  //fetch nominations controller
+
+  @Get('getNominations/:take')
+  async fetchNominations(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Param('take') param: number,
+  ) {
+    //get the user email from jwt signing
+
+    const admin = (req.user as any).userEmail;
+
+    const take = param;
+
+    //check if the email is present
+    if (!admin) {
+      return { message: 'Admin email not found' };
+    }
+
+    //invoke the readAllNominations function
+    const getNominations = await this.userService.readAllNominations(
+      take,
+      admin,
+    );
+
+    //return the nominations to the client
+    return {
+      nominations: getNominations,
+      message: 'Nominations returned successfully',
+    };
+  }
+
+  @Get('getNominees/:take')
+  async fetchNominationNominees(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Param('nominationId') param: number,
+  ) {
+    //get the user email from jwt signing
+
+    const admin = (req.user as any).userEmail;
+
+    const nominationId = param;
+
+    //check if the email is present
+    if (!admin) {
+      return { message: 'Admin email not found' };
+    }
+
+    //invoke the readAllNominations function
+    const getNominationNominees = await this.userService.readAllNominations(
+      nominationId,
+      admin,
+    );
+
+    //return the nominations to the client
+    return {
+      nominees: getNominationNominees,
+      message: 'Nominees returned successfully',
     };
   }
 }
