@@ -24,6 +24,8 @@ model User{
   userId String @unique @default(uuid())
   role Roles @default(REGULAR)
   isOnboarded Boolean @default(false)
+  recipientCode String? @unique
+  transferCode String? @unique
   organizations Organizations[]
   nominations Nominations[]
 }
@@ -73,10 +75,12 @@ model Nominees{
   nomineeEmail String
   nomineeProfileImage String
   nomineeBio String
-  nomineeCode String
+  nomineeCode String  @unique
   nomineeStatus String @default("pending")
   nomineeVotes Int @default(0)
   nomineeAmount Int @default(0)
+  tempVotes Int @default(0)
+  tempAmount Int @default(0)
   nomineeId Int @default(autoincrement())
   nominations Nominations @relation(fields: [nomineeId], references: [id])
 

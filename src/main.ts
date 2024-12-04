@@ -8,7 +8,7 @@ configDotenv();
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe()); //enables validation in nestjs
   app.setGlobalPrefix('api');
   await app.listen(process.env.PORT ?? 3000);
 }

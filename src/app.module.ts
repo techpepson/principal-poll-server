@@ -1,3 +1,7 @@
+import { PaystackModule } from './payments/paystack.module';
+import { PaystackService } from './payments/paystack.service';
+import { NomineeModule } from './votes/nominee.module';
+import { NomineeController } from './votes/nominee.votes.controller';
 import { ConstantsModule } from './constants/constants.module';
 import { DtoModule } from './dto/dto.module';
 import { Module } from '@nestjs/common';
@@ -12,6 +16,8 @@ import { GuardsModule } from './guards/guards.module';
 
 @Module({
   imports: [
+    PaystackModule,
+    NomineeModule,
     ConstantsModule,
     DtoModule,
     PrismaModule,
@@ -21,7 +27,7 @@ import { GuardsModule } from './guards/guards.module';
     OnboardModule,
     GuardsModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [NomineeController, AppController],
+  providers: [PaystackService, AppService],
 })
 export class AppModule {}
