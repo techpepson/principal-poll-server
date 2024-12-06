@@ -1,3 +1,4 @@
+import { PaymentsController } from './payments/payments.controller';
 import { PaystackModule } from './payments/paystack.module';
 import { PaystackService } from './payments/paystack.service';
 import { NomineeModule } from './votes/nominee.module';
@@ -13,6 +14,7 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { OnboardModule } from './onboard/onboard.module';
 import { GuardsModule } from './guards/guards.module';
+import { NomineeService } from './votes/nominee.service';
 
 @Module({
   imports: [
@@ -27,7 +29,7 @@ import { GuardsModule } from './guards/guards.module';
     OnboardModule,
     GuardsModule,
   ],
-  controllers: [NomineeController, AppController],
-  providers: [PaystackService, AppService],
+  controllers: [PaymentsController, NomineeController, AppController],
+  providers: [PaystackService, AppService, NomineeService],
 })
 export class AppModule {}

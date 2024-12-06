@@ -7,10 +7,13 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
-  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { PaymentDto } from 'src/dto/payment.dto';
+import {
+  CreateRecipientDto,
+  InitializeTransferDto,
+  PaymentDto,
+} from 'src/dto/payment.dto';
 import axios from 'axios';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -95,62 +98,12 @@ export class PaystackService {
     }
   }
 
-  //fetch the total amount an admin has earned
-  async fetchTotalAmount(email: string) {
-    const admin = await this.prisma.user.findUnique({
-      where: {
-        email,
-      },
-      select: {
-        role: true,
-      },
-    });
-
-    //check if the admin exists
-    if (!admin) {
-      throw new NotFoundException('The admin could not be found');
-    }
-
-    //check the role of the admin
-    if (admin.role !== 'ADMIN') {
-      throw new UnauthorizedException('Access denied');
-    }
-
-    //aggregate the nominees field
-
-    const calculateTotalNomineeAmount = await this.prisma.nominees.aggregate({
-      _sum: {
-        nomineeAmount: true,
-      },
-      where: {
-        nominations: {
-          user: {
-            email,
-          },
-        },
-      },
-      orderBy: {
-        nomineeAmount: 'asc',
-      },
-    });
-
-    //return the total amount to the client
-    return {
-      totalAmount: calculateTotalNomineeAmount._sum.nomineeAmount || 0,
-    };
-  }
-
   //create recipient
-  async createRecipient(
-    recipientName: string,
-    phoneNumber: string,
-    network: string,
-    adminEmail: string,
-  ) {
+  async createRecipient(payload: CreateRecipientDto) {
     //check the admin role
     const admin = await this.prisma.user.findUnique({
       where: {
-        email: adminEmail,
+        email: payload.adminEmail,
       },
       select: {
         role: true,
@@ -167,10 +120,10 @@ export class PaystackService {
       paystackUrl,
       {
         type: 'mobile_money',
-        name: recipientName,
+        name: payload.recipientName,
         currency: 'GHS',
-        phone: phoneNumber,
-        bank_code: network,
+        phone: payload.phoneNumber,
+        bank_code: payload.network,
       },
       {
         headers: {
@@ -183,7 +136,7 @@ export class PaystackService {
     //store the recipient code in a database
     await this.prisma.user.update({
       where: {
-        email: adminEmail,
+        email: payload.adminEmail,
       },
       data: {
         recipientCode: response.data.recipient_code,
@@ -197,14 +150,10 @@ export class PaystackService {
   }
 
   //payment transfer
-  async initializeTransferPayment(
-    adminEmail: string,
-    reason: string,
-    amount: number,
-  ) {
+  async initializeTransferPayment(payload: InitializeTransferDto) {
     const admin = await this.prisma.user.findUnique({
       where: {
-        email: adminEmail,
+        email: payload.adminEmail,
       },
       select: {
         role: true,
@@ -223,8 +172,8 @@ export class PaystackService {
       paystackUrl,
       {
         source: 'balance',
-        reason: reason,
-        amount,
+        reason: payload.reason,
+        amount: payload.amount,
         recipient: admin.recipientCode,
       },
       {
@@ -238,7 +187,7 @@ export class PaystackService {
     //store the transfer code
     await this.prisma.user.update({
       where: {
-        email: adminEmail,
+        email: payload.adminEmail,
       },
       data: {
         transferCode: response.data.transfer_code,
