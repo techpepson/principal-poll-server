@@ -43,7 +43,6 @@ export class UserController {
       return res.redirect(307, 'https://www.google.com');
     }
 
-    res.send(userOnboard);
     //return the user to the client
     return {
       userOnboard,

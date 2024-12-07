@@ -91,6 +91,7 @@ export class NominationsDto {
 
   @IsString()
   nominationDescription: string;
+
   @IsDate()
   @IsNotEmpty()
   nominationStartDate: Date;
@@ -100,11 +101,7 @@ export class NominationsDto {
   nominationEndDate: Date;
 
   @IsString()
-  nominationId: string;
-
-  @IsString()
-  @IsNotEmpty()
-  nomineeName: string;
+  nominationId: number;
 
   @IsString()
   @IsNotEmpty()
@@ -134,8 +131,4 @@ export class NominationsDto {
   @IsString()
   @IsNotEmpty()
   nomineeBio: string;
-
-  @IsString()
-  @IsNotEmpty()
-  uniqueNominationId: string;
 }

@@ -59,7 +59,7 @@ model Nominations{
   uniqueNominationId String @unique
   nominationTitle String
   nominees Nominees[]
-  nominationRate Int
+  nominationRate Float
   user User @relation(fields: [nominationId], references: [id])
 }
 

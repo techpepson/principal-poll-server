@@ -96,14 +96,8 @@ export class UserService {
       },
     });
 
-    const nominationExist = await this.prisma.nominations.findUnique({
-      where: {
-        uniqueNominationId: payload.nominationId,
-      },
-    });
-
     //throw an error when the nominee has been nominated already
-    if (nominationExist && nomineeExists) {
+    if (nomineeExists) {
       throw new ConflictException('Nomination already created.');
     }
 

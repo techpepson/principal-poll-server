@@ -1,6 +1,7 @@
 import {
   BadGatewayException,
   BadRequestException,
+  ConflictException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -27,7 +28,7 @@ export class AuthService {
     });
 
     if (existingUser) {
-      throw new BadRequestException('User already exists');
+      throw new ConflictException('User already exists');
     }
 
     // Hash the user's password
