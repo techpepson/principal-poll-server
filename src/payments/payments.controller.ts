@@ -29,6 +29,13 @@ export class PaymentsController {
     };
   }
 
+  //initialize payment
+  @Post('payment-initialize')
+  async initPayment(@Body() payload: any) {
+    const email = payload.email;
+  }
+
+  //initialize transfer recipient
   @Post('initialize-transfer-recipient')
   async initializeTransferPayment(
     @Body() payload: InitializeTransferDto,

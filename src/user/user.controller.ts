@@ -6,8 +6,8 @@ import {
   Body,
   Controller,
   Get,
-  Param,
   Post,
+  Query,
   Req,
   Res,
   UseGuards,
@@ -50,7 +50,7 @@ export class UserController {
     };
   }
 
-  @Post('nominateNominee')
+  @Post('nominate-nominee')
   @UseGuards(JwtGuard)
   async addNominee(@Body() payload: NominationsDto, @Req() req: Request) {
     const user = (req.user as any).userEmail;
@@ -64,24 +64,29 @@ export class UserController {
 
     //return the created nomination to the client
     return {
+      message: 'Nomination successful',
       nominee: createNomination,
     };
   }
 
-  @Post('approveNominee')
-  async approveNominee(@Req() req: Request, @Param('id') nomineeId: string) {
-    const admin = (req.user as any).userEmail;
+  @Get('approve-nominee')
+  @UseGuards(JwtGuard)
+  async approveNominee(
+    @Req() req: Request,
+    @Query('nominee-code') nomineeCode: string,
+  ) {
+    const adminEmail = (req.user as any).userEmail;
 
     //check if the user is logged in
-    if (!admin) {
+    if (!adminEmail) {
       return { message: ' Admin not found' };
     }
 
-    //get  the id from the param
-    const id = nomineeId;
-
     //invoke the approve nominee method
-    const approveNominee = await this.userService.approveNominee(admin, id);
+    const approveNominee = await this.userService.approveNominee(
+      adminEmail,
+      nomineeCode,
+    );
 
     //return the approved nominee to the client
     return {
@@ -90,8 +95,12 @@ export class UserController {
   }
 
   //remove user
-  @Post('approveNominee')
-  async removeNominee(@Req() req: Request, @Param('id') nomineeId: string) {
+  @Get('remove-nominee')
+  @UseGuards(JwtGuard)
+  async removeNominee(
+    @Req() req: Request,
+    @Query('nominee-code') nomineeCode: string,
+  ) {
     const admin = (req.user as any).userEmail;
 
     //check if the user is logged in
@@ -99,11 +108,11 @@ export class UserController {
       return { message: ' Admin not found' };
     }
 
-    //get  the id from the param
-    const id = nomineeId;
-
     //invoke the remove nominee method
-    const approveNominee = await this.userService.removeNominee(admin, id);
+    const approveNominee = await this.userService.removeNominee(
+      admin,
+      nomineeCode,
+    );
 
     //return the removed nominee to the client
     return {
@@ -111,43 +120,14 @@ export class UserController {
     };
   }
 
-  //fetch nominations controller
+  //edit account
 
-  @Get('getNominations/:take')
-  async fetchNominations(
-    @Req() req: Request,
-    @Res() res: Response,
-    @Param('take') param: number,
-  ) {
-    //get the user email from jwt signing
-
-    const admin = (req.user as any).userEmail;
-
-    const take = param;
-
-    //check if the email is present
-    if (!admin) {
-      return { message: 'Admin email not found' };
-    }
-
-    //invoke the readAllNominations function
-    const getNominations = await this.userService.readAllNominations(
-      take,
-      admin,
-    );
-
-    //return the nominations to the client
-    return {
-      nominations: getNominations,
-      message: 'Nominations returned successfully',
-    };
-  }
-
-  @Get('getNominees/:take')
+  //fetch nominees controller
+  @Get('get-nomination-nominees')
+  @UseGuards(JwtGuard)
   async fetchNominationNominees(
     @Req() req: Request,
-    @Res() res: Response,
-    @Param('nominationId') param: number,
+    @Query('nomination-id') param: string,
   ) {
     //get the user email from jwt signing
 
@@ -161,8 +141,51 @@ export class UserController {
     }
 
     //invoke the readAllNominations function
+    const getNominationNominees =
+      await this.userService.readAllNominationNominees(nominationId, admin);
+
+    //return the nominations to the client
+    return {
+      nominees: getNominationNominees,
+      message: getNominationNominees.message,
+    };
+  }
+
+  //edit user account
+  @Post('edit-account')
+  @UseGuards(JwtGuard)
+  async editAccount(@Req() req: Request, @Body() payload: any) {
+    const email = await (req.user as any).userEmail;
+
+    //instantiate the edit account class
+    const accountEdit = await this.userService.editAccount(email, payload);
+
+    return {
+      message: accountEdit.message,
+    };
+  }
+
+  //get nominations controller
+  @Get('get-nominations')
+  @UseGuards(JwtGuard)
+  async fetchNominations(
+    @Req() req: Request,
+    @Query('take-value') param: number,
+  ) {
+    //get the user email from jwt signing
+
+    const admin = (req.user as any).userEmail;
+
+    const takeValue = param;
+
+    //check if the email is present
+    if (!admin) {
+      return { message: 'Admin email not found' };
+    }
+
+    //invoke the readAllNominations function
     const getNominationNominees = await this.userService.readAllNominations(
-      nominationId,
+      takeValue,
       admin,
     );
 
@@ -170,6 +193,22 @@ export class UserController {
     return {
       nominees: getNominationNominees,
       message: 'Nominees returned successfully',
+      length: getNominationNominees.length,
+    };
+  }
+
+  //delete account
+  @Get('delete-account')
+  @UseGuards(JwtGuard)
+  async deleteAccount(@Req() req: Request) {
+    const email = await (req.user as any).userEmail;
+
+    //instantiate the delete account class
+    const accountDelete = await this.userService.deleteAccount(email);
+
+    //return a message to the client
+    return {
+      message: accountDelete.message,
     };
   }
 }

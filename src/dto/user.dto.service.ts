@@ -1,3 +1,4 @@
+import { Transform } from 'class-transformer';
 import {
   IsArray,
   IsDate,
@@ -64,21 +65,13 @@ export class NomineesDto {
   @IsString()
   @IsNotEmpty()
   nomineeBio: string;
-
-  @IsString()
-  @IsNotEmpty()
-  uniqueNominationId: string;
 }
 
 export class NominationsDto {
   @IsString()
-  @IsNotEmpty()
-  nominationName: string;
-
-  @IsString()
   nominationsTitle: string;
 
-  @IsString()
+  @IsString({ each: true })
   @IsNotEmpty()
   @IsArray()
   nominationCategories: string[];
@@ -86,7 +79,11 @@ export class NominationsDto {
   @IsString()
   nominationPeriod: string;
 
-  @IsNumber()
+  @IsNumber(
+    { allowInfinity: false, allowNaN: false },
+    { message: 'Value must be a valid float' },
+  )
+  @Transform(({ value }) => Number(value))
   nominationRate: number;
 
   @IsString()
@@ -94,14 +91,13 @@ export class NominationsDto {
 
   @IsDate()
   @IsNotEmpty()
+  @Transform(({ value }) => new Date(value))
   nominationStartDate: Date;
 
   @IsDate()
   @IsNotEmpty()
+  @Transform(({ value }) => new Date(value))
   nominationEndDate: Date;
-
-  @IsString()
-  nominationId: number;
 
   @IsString()
   @IsNotEmpty()

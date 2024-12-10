@@ -40,7 +40,7 @@ model Organizations{
   address String
   profileImage String
   uniqueOrganizationId String @unique @default(cuid())
-  organizationId Int 
+  organizationId Int
   user User @relation(fields: [organizationId], references: [id])
 }
 
@@ -54,13 +54,13 @@ model Nominations{
   nominationId Int @unique @default(autoincrement())
   nominationStartDate DateTime
   nominationEndDate DateTime
-  nominationPeriod DateTime
+  nominationPeriod String
   nominationDescription String
   uniqueNominationId String @unique
   nominationTitle String
   nominees Nominees[]
-  nominationRate Float
-  user User @relation(fields: [nominationId], references: [id])
+  nominationRate Int
+  user User @relation(fields: [nominationId], references: [id], onDelete: Cascade)
 }
 
 model Nominees{
@@ -82,7 +82,7 @@ model Nominees{
   tempVotes Int @default(0)
   tempAmount Int @default(0)
   nomineeId Int @default(autoincrement())
-  nominations Nominations @relation(fields: [nomineeId], references: [id])
+  nominations Nominations @relation(fields: [nomineeId], references: [id], onDelete: Cascade)
 
 }
 

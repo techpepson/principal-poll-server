@@ -97,8 +97,11 @@ export class UserService {
     });
 
     //throw an error when the nominee has been nominated already
-    if (nomineeExists) {
-      throw new ConflictException('Nomination already created.');
+    if (
+      nomineeExists &&
+      nomineeExists.nomineeCategory.includes(payload.nomineeCategory)
+    ) {
+      throw new ConflictException('Nominee already created in this category.');
     }
 
     //throw an error when the host is not permitted or authorized
@@ -123,11 +126,11 @@ export class UserService {
               nominationCategories: payload.nominationCategories.map(
                 (category) => category,
               ),
-              nominationStartDate: payload.nominationStartDate,
-              nominationEndDate: payload.nominationEndDate,
+              nominationStartDate: new Date(payload.nominationStartDate),
+              nominationEndDate: new Date(payload.nominationEndDate),
               nominationPeriod: payload.nominationPeriod,
               nominationDescription: payload.nominationDescription,
-              uniqueNominationId: this.uniqueGeneratedId,
+              uniqueNominationId: generateId(),
               nominationTitle: payload.nominationsTitle,
               nominationRate: payload.nominationRate,
               nominees: {
@@ -138,10 +141,17 @@ export class UserService {
                   nomineeEmail: payload.nomineeEmail,
                   nomineeProfileImage: payload.nomineeProfileImage,
                   nomineeBio: payload.nomineeBio,
-                  nomineeCode: this.uniqueGeneratedId,
+                  nomineeCode: generateId(),
                   nomineeCategory: payload.nomineeCategory,
                 },
               },
+            },
+          },
+        },
+        include: {
+          nominations: {
+            include: {
+              nominees: true,
             },
           },
         },
@@ -155,14 +165,15 @@ export class UserService {
       };
     } catch (error) {
       if (error instanceof Error) {
-        this.logger.error(`Error: ${error.message}`, error.stack);
+        // this.logger.error(`Error: ${error.message}`, error.stack);
+        console.log(error);
         throw new InternalServerErrorException('Nominee addition failed');
       }
       this.logger.error('An unknown error occurred:', error);
     }
   }
 
-  async approveNominee(adminEmail: string, nomineeId: string) {
+  async approveNominee(adminEmail: string, nomineeCode: string) {
     //check the admin performing operation
     const admin = await this.prisma.user.findUnique({
       where: {
@@ -178,7 +189,7 @@ export class UserService {
     //get the nominee from the database
     const nominee = await this.prisma.nominees.findFirst({
       where: {
-        nomineeCode: nomineeId,
+        nomineeCode: nomineeCode,
       },
     });
 
@@ -187,32 +198,40 @@ export class UserService {
       throw new NotFoundException('Nominee not found.');
     }
 
+    //check if the nominee has been approved already
+    if (nominee.nomineeStatus === 'approved') {
+      throw new ConflictException('The nominee has been approved already.');
+    }
     //update the nominee status
     try {
-      this.prisma.nominees.update({
+      const updatedNominee = await this.prisma.nominees.update({
         where: {
-          uniqueNomineeId: nomineeId,
+          nomineeCode,
         },
         data: {
           nomineeStatus: 'approved',
         },
       });
+
+      return {
+        message: 'Nominee Approved successfully',
+        nominee: updatedNominee, // Return the updated nominee
+      };
     } catch (error) {
       if (error instanceof Error) {
+        this.logger.error(
+          `An error occurred while approving user, ${error.stack}`,
+        );
         throw new InternalServerErrorException(
           'An error occurred while approving nominee',
         );
       }
       this.logger.error(error);
     }
-
-    return {
-      message: 'Nominee Approved successfully',
-    };
   }
 
   //remove nominee
-  async removeNominee(adminEmail: string, nomineeId: string) {
+  async removeNominee(adminEmail: string, nomineeCode: string) {
     //check the admin performing operation
     const admin = await this.prisma.user.findUnique({
       where: {
@@ -228,7 +247,7 @@ export class UserService {
     //get the nominee from the database
     const nominee = await this.prisma.nominees.findFirst({
       where: {
-        nomineeCode: nomineeId,
+        nomineeCode,
       },
     });
 
@@ -238,10 +257,20 @@ export class UserService {
     }
 
     try {
-      //update the nominee status
-      this.prisma.nominees.delete({
+      //delete nominations
+      await this.prisma.nominations.deleteMany({
         where: {
-          uniqueNomineeId: nomineeId,
+          nominees: {
+            some: {
+              nomineeCode,
+            },
+          },
+        },
+      });
+
+      await this.prisma.nominees.delete({
+        where: {
+          nomineeCode,
         },
       });
     } catch (error) {
@@ -277,6 +306,11 @@ export class UserService {
           email,
         },
       });
+
+      //return a message to the service
+      return {
+        message: 'Account deleted successfully.',
+      };
     } catch (error) {
       if (error instanceof Error) {
         throw new InternalServerErrorException('Error deleting account');
@@ -300,6 +334,13 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
 
+    //check if payload includes restricted editing values
+    if (
+      Object.keys(payload).includes('role') ||
+      Object.keys(payload).includes('isOnboarded')
+    ) {
+      throw new UnauthorizedException('Such edits are not allowed.');
+    }
     //update the database with whatever is provided by user
     await this.prisma.user.update({
       where: {
@@ -345,7 +386,14 @@ export class UserService {
         include: {
           nominations: {
             orderBy: {
-              nominationDescription: 'asc',
+              nominationTitle: 'asc',
+            },
+            include: {
+              nominees: {
+                orderBy: {
+                  nomineeFirstName: 'asc',
+                },
+              },
             },
           },
         },
@@ -355,6 +403,7 @@ export class UserService {
       return {
         message: 'Nominations returned successfully.',
         nominations,
+        length: nominations.length,
       };
     } catch (error) {
       // Log the error for debugging (optional)

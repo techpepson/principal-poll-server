@@ -10,12 +10,14 @@ import {
   Param,
   Post,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import { NomineeService } from './nominee.service';
 import { FinalizePaymentDto, InitPaymentDto } from 'src/dto/payment.dto';
 import { Request } from 'express';
+import { JwtGuard } from 'src/guards';
 
-@Controller('nominee')
+@Controller('votes')
 export class NomineeController {
   constructor(private votingService: NomineeService) {}
 
@@ -62,6 +64,7 @@ export class NomineeController {
   }
 
   @Get('get-total-amount')
+  @UseGuards(JwtGuard)
   async fetchAllAmounts(@Body() email: string, @Req() req: Request) {
     //fetch the admin email from the sign in request
     email = (req.user as any).userEmail;
